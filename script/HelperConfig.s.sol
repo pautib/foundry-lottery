@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {Script} from "forge-std/Script.sol";
 import {Raffle} from "src/Raffle.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {LinkToken} from "test/mocks/LinkToken.sol";
 
 abstract contract CodeConstants {
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
@@ -16,7 +17,7 @@ abstract contract CodeConstants {
 
     uint256 public constant MOCK_INTERVAL_TIME = 30;
     uint256 public constant MOCK_ENTRANCE_FEE = 0.01 ether;
-    uint32 public constant MOCK_GAS_LIMIT = 500000;
+    uint32 public constant MOCK_GAS_LIMIT = 500_000;
 }
 
 contract HelperConfig is Script, CodeConstants {
@@ -31,6 +32,7 @@ contract HelperConfig is Script, CodeConstants {
         uint32 callbackGasLimit;
         uint256 subscriptionId;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -58,6 +60,8 @@ contract HelperConfig is Script, CodeConstants {
         // Deploy a Mock
         vm.startBroadcast();
         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UNIT_LINK);
+        LinkToken linkToken = new LinkToken();
+        uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
@@ -66,10 +70,12 @@ contract HelperConfig is Script, CodeConstants {
             vrfCoordinator: address(vrfCoordinatorMock),
             gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
             callbackGasLimit: MOCK_GAS_LIMIT,
-            subscriptionId: 0,
-            link: 
+            subscriptionId: subscriptionId,
+            link: address(linkToken),
+            account: 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
         });
-
+        
+        vm.deal(localNetworkConfig.account, 100 ether);
         return localNetworkConfig;
     }
 
@@ -77,11 +83,12 @@ contract HelperConfig is Script, CodeConstants {
         return NetworkConfig({
             entranceFee: MOCK_ENTRANCE_FEE,
             interval: MOCK_INTERVAL_TIME,
-            vrfCoordinator: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625,
-            gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             callbackGasLimit: MOCK_GAS_LIMIT,
-            subscriptionId: 0,
-            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            subscriptionId: 95817985215656226021089428195289403364674614772546164486197130250196841556124,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0xf9B76f65f36b172d010b15FC9eC966dD3D23607d
         });
     }
 
